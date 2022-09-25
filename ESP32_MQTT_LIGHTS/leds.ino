@@ -36,12 +36,15 @@ typedef struct
     uint32_t addr_leds_drivr_update:1U;
     uint32_t addr_leds_drivr_status:6U;
     uint32_t addr_leds_effect_mode:8U;
-    uint32_t unused:14U;
+    uint32_t new_effect:8U;
+    uint32_t unused:6U;
 }leds_client_flags_t;
 
 
 /* LEDs Global Variables ------------------------------------------------------ */
 uint8_t  leds_rgb_buffer[900U];
+uint8_t  leds_rgb_solid_buffer[3U];
+
 leds_client_flags_t leds_client_flags = {0U};
 uint16_t leds_current_effect_strip_length = LEDS_STRIP_LENGTH;
 
@@ -58,7 +61,7 @@ void LedsReset(void)
     if(0U != leds_client_flags.initialised)
     {
         leds_client_flags.addr_leds_drivr_ready = 0U;
-        leds_client_flags.addr_leds_drivr_update = 0U;
+        //leds_client_flags.addr_leds_drivr_update = 0U;
         leds_client_flags.addr_leds_drivr_status = 0U;
     
         ledcWrite(channelR, 0);
@@ -136,19 +139,17 @@ void LedsSetRGB(uint8_t r, uint8_t g, uint8_t b)
       Serial.print("    BLUE: ");
       Serial.println(b);
       
-      leds_rgb_buffer[0U] = r;
-      leds_rgb_buffer[1U] = g;
-      leds_rgb_buffer[2U] = b;
-      LedsRGBReformat(leds_rgb_buffer);
+      leds_rgb_solid_buffer[0U] = r;
+      leds_rgb_solid_buffer[1U] = g;
+      leds_rgb_solid_buffer[2U] = b;
+      LedsRGBReformat(leds_rgb_solid_buffer);
 
-      if(0U != leds_client_flags.addr_leds_effect_mode)
+      if(0U != leds_client_flags.new_effect)
       {
-          LedsSelectEffectMode(0U);
+          LedsSetEffectMode(0U);
       }
             
-      leds_client_flags.addr_leds_drivr_update = !0U;
-      leds_client_flags.addr_leds_effect_mode = 0U;
-      
+      leds_client_flags.addr_leds_drivr_update = !0U;      
   }
 }
 
@@ -156,8 +157,13 @@ void LedsWork(void)
 {
     if((0U != leds_client_flags.initialised) && (0U != leds_client_flags.work_run))
     {
-        if((0U == leds_client_flags.addr_leds_drivr_ready) || (0U != leds_client_flags.addr_leds_drivr_update) || (0U != leds_client_flags.addr_leds_effect_mode))
+        if((0U == leds_client_flags.addr_leds_drivr_ready) || (0U != leds_client_flags.addr_leds_drivr_update) || (0U != leds_client_flags.addr_leds_effect_mode) || (leds_client_flags.new_effect != leds_client_flags.addr_leds_effect_mode))
         {
+            if(leds_client_flags.new_effect != leds_client_flags.addr_leds_effect_mode)
+            {
+                LedsSelectEffectMode(leds_client_flags.new_effect);
+            }
+            
             LedsAddressbleDriver();
         }
         
@@ -171,6 +177,13 @@ bool LedsReady(void)
 }
 
 
+void LedsSetEffectMode(uint8_t effect_mode)
+{
+    leds_client_flags.new_effect = effect_mode;
+}
+
+
+/* LEDs Internal Functions ---------------------------------------------------- */
 void LedsSelectEffectMode(uint8_t effect_mode)
 {
     leds_client_flags.addr_leds_effect_mode = effect_mode;  
@@ -193,10 +206,10 @@ void LedsSelectEffectMode(uint8_t effect_mode)
     }
     Serial.println("LEDs");
     Serial.print("    Effect length: ");Serial.print(leds_current_effect_strip_length);Serial.println(" bytes.");
+    leds_client_flags.new_effect = leds_client_flags.addr_leds_effect_mode;
 }
 
 
-/* LEDs Internal Functions ---------------------------------------------------- */
 void LedsRGBReformat(uint8_t *rgb)
 {
   uint8_t temp_leds_rgb_format[3];
@@ -264,7 +277,7 @@ void LedsWorkRun(void)
 
 void LedsAddressbleDriver(void)
 {  
-    static uint32_t leds_delay = 2U;
+    static uint32_t leds_delay = 0U;
   
     switch(leds_client_flags.addr_leds_drivr_status)
     {
@@ -310,6 +323,7 @@ void LedsAddressbleDriver(void)
               Serial.println("    Addressable LEDs driver is ready.");
               leds_client_flags.addr_leds_drivr_ready = !0U;
               leds_client_flags.addr_leds_drivr_status++;
+              leds_client_flags.addr_leds_drivr_update = !0U;  
           }
           else
           {
@@ -317,8 +331,40 @@ void LedsAddressbleDriver(void)
           }
         }
         break;
-  
+
+        
         case 3:
+        {
+            if(Serial2.read() == 'R')
+            {        
+                uint32_t counter = 0;
+                if(0U == leds_client_flags.addr_leds_effect_mode)
+                {
+                    while(counter++ < LEDS_STRIP_LENGTH/3)
+                    {
+                        uint8_t colr[3] = {0,0,0};
+                        Serial2.write(colr,3);
+                    }
+                }
+                leds_client_flags.addr_leds_drivr_status = 5;
+                leds_delay = LEDS_DELAY_RESET;
+            }
+            else
+            {
+                if(leds_delay > 0)
+                {
+                    leds_delay--;
+                }
+                else
+                {
+                    /* Fill in with nulls. */
+                    Serial2.write("\0",1);
+                }
+            }
+        }
+        break;
+        
+        case 4:
         {
             if(Serial2.read() == 'R')
             {        
@@ -327,8 +373,9 @@ void LedsAddressbleDriver(void)
                 {
                     while(counter++ < leds_current_effect_strip_length/3)
                     {
-                        Serial2.write(leds_rgb_buffer,3);
+                        Serial2.write(leds_rgb_solid_buffer,3);
                     }
+                    leds_client_flags.addr_leds_drivr_update = 0U;  
                 }
                 else
                 {
@@ -339,6 +386,7 @@ void LedsAddressbleDriver(void)
                         Serial2.write(colr,3);
                     }
                 }
+                
                 leds_client_flags.addr_leds_drivr_status++;
                 leds_delay = LEDS_DELAY_RESET;
             }
@@ -357,7 +405,7 @@ void LedsAddressbleDriver(void)
         }
         break;
       
-        case 4:
+        case 5:
         {
             /* All data sent, wait for Yes signal from driver. */
             if(Serial2.read() == 'Y')
@@ -366,7 +414,6 @@ void LedsAddressbleDriver(void)
                 {
                     EffectsFromFileReadEffect(leds_rgb_buffer);
                 }
-
                 
                 leds_client_flags.addr_leds_drivr_status--;
                 leds_delay = LEDS_DELAY_RESET;

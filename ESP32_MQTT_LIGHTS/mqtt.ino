@@ -182,9 +182,9 @@ void MQTTHandle(int message_len)
     String received_topic = mqtt_client.messageTopic();
     
     
-    char message_data[2100]={0};
+    char message_data[1100]={0};
     uint16_t message_data_len = 0;
-    while (mqtt_client.available() && message_data_len<2100 && message_data_len<message_len) 
+    while (mqtt_client.available() && message_data_len<1100 && message_data_len<message_len) 
     {
       message_data[message_data_len++] = (char)mqtt_client.read();
     }
@@ -225,7 +225,7 @@ void MQTTHandleEffectSelectionMessage(char *message_data, uint16_t message_len)
             effect_value = strtoul((const char*)message_data, NULL, 10);
         }
        
-        LedsSelectEffectMode(effect_value);
+        LedsSetEffectMode(effect_value);
     }
 }
 

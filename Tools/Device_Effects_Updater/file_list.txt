@@ -1,9 +1,9 @@
-../Maker/50LED_FIREFLIES.leds.esp32
-../Maker/50LED_METEO.leds.esp32
-../Maker/50LED_XTMAS.leds.esp32
-../Maker/50LED_RAINBOW_ROTATE.leds.esp32
-../Maker/50LED_RGB_ROTATE.leds.esp32
-../Maker/50LED_FALLING_STARS.leds.esp32
-../Maker/50LED_FIREWORKS.leds.esp32
-../Maker/50LED_WAVES.leds.esp32
+../Effects_Converter/50LED_FIREFLIES.leds.esp32
+../Effects_Converter/50LED_METEO.leds.esp32
+../Effects_Converter/50LED_XTMAS.leds.esp32
+../Effects_Converter/50LED_RAINBOW_ROTATE.leds.esp32
+../Effects_Converter/50LED_RGB_ROTATE.leds.esp32
+../Effects_Converter/50LED_FALLING_STARS.leds.esp32
+../Effects_Converter/50LED_FIREWORKS.leds.esp32
+../Effects_Converter/50LED_WAVES.leds.esp32
 
