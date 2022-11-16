@@ -43,6 +43,8 @@ const char* request_webpage =  "<!DOCTYPE html>\r\n\
 <input type=\"text\" id=\"broker_port\" name=\"broker_port\" maxlength=\"5\" size=\"5\"><br><br>\r\n\
 <label for=\"rgb_format\">RGB Format (RGB GRB BRG...):</label>\r\n\
 <input type=\"text\" id=\"rgb_format\" name=\"rgb_format\"  maxlength=\"3\" size=\"3\" value=\"RGB\"><br><br>\r\n\
+<label for=\"id_number\">Device ID:</label>\r\n\
+<input type=\"text\" id=\"id_number\" name=\"id_number\"  maxlength=\"10\" size=\"10\" value=\"%s\"><br><br>\r\n\
 <input type=\"submit\" value=\"[  --  Connect  --  ]\">\r\n\
 </form>\r\n\
 </body>\r\n\
@@ -267,7 +269,9 @@ void WifiSetHotspot(bool enable)
     if(enable)
     {
         
-        Serial.print("Starting hotspot... ");  
+        Serial.println("Starting hotspot... ");  
+
+        Serial.print("    SSID: ");  Serial.println(userID_);  
         WiFi.softAP(userID_.c_str());
         WiFi.softAPConfig(local_ip, gateway, subnet);
         wifi_server.on(F("?"), handle_NotFound);
@@ -277,13 +281,13 @@ void WifiSetHotspot(bool enable)
     }
     else
     {
-        Serial.print("Stopping hotspot...");
+        Serial.println("Stopping hotspot...");
         wifi_server.stop();
         WiFi.softAPdisconnect(true);
         wifi_client_flags.hotspot_running = 0U;
     }
 
-    Serial.println(" done.");  
+    Serial.println("    done.");  
             
 }
 
@@ -354,7 +358,8 @@ void handle_workNotFound()
 
 void handle_NotFound() 
 {
-  char temp_data[1024];
+
+  char temp_data2[64];
   uint8_t temp_len = 0U;
   String result = wifi_server.arg("ssid");
   Serial.println("Wifi WEB request received: ");
@@ -363,6 +368,8 @@ void handle_NotFound()
   
   if(result != "" && 0U == wifi_client_flags.webpage_to_show)
   {
+      char *temp_data = (char*)malloc(1024);
+      
       wifi_server.arg("ssid").toCharArray(temp_data,SSID_MAX_LEN);
       EepromWrite(EEPROM_SSID, (uint8_t*)temp_data, SSID_MAX_LEN);
       
@@ -377,6 +384,10 @@ void handle_NotFound()
       
       wifi_server.arg("rgb_format").toCharArray(temp_data,RGB_FORMAT_MAX_LEN);
       EepromWrite(EEPROM_RGB_FORMAT, (uint8_t*)temp_data, RGB_FORMAT_MAX_LEN);
+
+      wifi_server.arg("id_number").toCharArray(temp_data,SERIAL_NUM_MAX_LEN);
+      EepromSetLoadSerialNumber(temp_data);
+      
 
       temp_len = SSID_MAX_LEN;
       memset(temp_data,0U, SSID_MAX_LEN+1);
@@ -398,19 +409,27 @@ void handle_NotFound()
       EepromRead(EEPROM_MQTT_BROKER_PORT, (uint8_t*)temp_data, &temp_len);
       Serial.print("MQTT Broker port - "); Serial.println(temp_data);
 
-      temp_len = RGB_FORMAT_MAX_LEN;
-      memset(temp_data,0U, RGB_FORMAT_MAX_LEN+1);
-      EepromRead(EEPROM_RGB_FORMAT, (uint8_t*)temp_data, &temp_len);
-      Serial.print("RGB format - "); Serial.println(temp_data);
-
+      temp_len = SERIAL_NUM_MAX_LEN;
+      memset(temp_data,0U, SERIAL_NUM_MAX_LEN+1);
+      EepromRead(EEPROM_SERIAL_NUM, (uint8_t*)temp_data, &temp_len);
+      Serial.print("Device ID - "); Serial.println(temp_data);
+      
       wifi_client_flags.webpage_to_show = 1;
+      free(temp_data);
   }
 
   if(0U == wifi_client_flags.webpage_to_show)
   {
+    
+      char *temp_data = (char*)malloc(10000);
       Serial.println("Request SSID and PASS.");
-      wifi_server.send(200, "text/html",request_webpage); 
-      
+      temp_len = SERIAL_NUM_MAX_LEN;
+      memset(temp_data2,0U, SERIAL_NUM_MAX_LEN+1);
+      EepromRead(EEPROM_SERIAL_NUM, (uint8_t*)temp_data2, &temp_len);
+      Serial.print(" with serial number "); Serial.println(temp_data2);
+      sprintf((char*)temp_data, request_webpage, temp_data2);
+      wifi_server.send(200, "text/html",(char*)temp_data);   
+      free(temp_data);
   }
   else
   if(1U == wifi_client_flags.webpage_to_show)
@@ -429,10 +448,13 @@ void handle_NotFound()
   else  
   if(3U == wifi_client_flags.webpage_to_show)
   {
+    
+      char *temp_data = (char*)malloc(1024);
       Serial.print("Query on connection: ");
       Serial.println("IP webpage sent."); 
       IPAddress temp_ip = WifiGetIp();
       sprintf((char*)temp_data, ready_webpage, temp_ip[0], temp_ip[1], temp_ip[2], temp_ip[3]);
       wifi_server.send(200, "text/html",(char*)temp_data); 
+      free(temp_data);
   }
 }

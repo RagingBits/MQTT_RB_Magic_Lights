@@ -1,3 +1,9 @@
+Versions
+¨¨¨¨¨¨¨¨
+V2.2 - Added support for intensity setting.
+V2.3 - Added setup page option for device ID change. No longer an exclusive of serial port.
+
+
 Using the ESP32_Wroom_Tools\Programmer
 ¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨
 1) Connect the PC serial port to the UART pins in the MQTT device.

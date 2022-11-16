@@ -8,6 +8,15 @@
    The length of the number MUST be respected. 10 digits EXACTLY. 
    */
    
+/* 
+  FW  v2.1 - Base project ready for work.
+      v2.2 - Added support for intensity control.
+      v2.3 - Added option for Device ID (serial number) setting on setup Webpage.
+             Also changed the serial port setup. Both support any chars up to 10 chars.
+
+  HW  v1   - Base project ready to work.  
+ */
+
 
 /* FIXED definitions. Do not change!!! ------------------------------------*/
 
@@ -20,4 +29,4 @@ String userID_   = "rb_wifi_mqtt_lights_0000000000";
 
 /* Current Hardware version defines pinouts. */
 #define HARDWARE_VERSION  HW_V_1
-#define FIRMWARE_VERSION  HW_V_2.1
+#define FIRMWARE_VERSION  FW_V_2.3 

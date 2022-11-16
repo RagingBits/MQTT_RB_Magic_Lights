@@ -21,6 +21,8 @@ typedef struct
 
 /* MQTT Global Constants ------------------------------------------------------ */
 const String COMMAND_RGB_TOPIC_ PROGMEM = "_rgb_set";
+const String COMMAND_INTENSITY_TOPIC_ PROGMEM = "_intensity_set";
+
 const String COMMAND_EFFECT_SEL_TOPIC_ PROGMEM = "_effect_selection";
 const String COMMAND_FILE_TRANSFER_TOPIC_ PROGMEM = "_file_transfer";
 const String COMMAND_FILE_TRANSFER_REP_TOPIC_ PROGMEM = "_file_transfer_reply";
@@ -34,6 +36,7 @@ String COMMAND_RGB_TOPIC = "";
 String COMMAND_EFFECT_SEL_TOPIC = "";
 String COMMAND_FILE_TRANSFER_TOPIC = "";
 String COMMAND_FILE_TRANSFER_REP_TOPIC = "";
+String COMMAND_INTENSITY_TOPIC = "";
 
 uint32_t mqtt_transfered_file_length = 0;
 
@@ -59,6 +62,8 @@ void MQTTConnect(void)
         COMMAND_EFFECT_SEL_TOPIC  = userID_ + COMMAND_EFFECT_SEL_TOPIC_;
         COMMAND_FILE_TRANSFER_TOPIC  = userID_ + COMMAND_FILE_TRANSFER_TOPIC_;
         COMMAND_FILE_TRANSFER_REP_TOPIC = userID_ + COMMAND_FILE_TRANSFER_REP_TOPIC_;
+
+        COMMAND_INTENSITY_TOPIC = userID_ + COMMAND_INTENSITY_TOPIC_;
         
         Serial.println("Done.");
     }
@@ -96,6 +101,8 @@ void MQTTPerformSubscriptions(void)
     mqtt_client.subscribe(COMMAND_EFFECT_SEL_TOPIC);
     Serial.print("    MQTT Subscribe: ");Serial.println(COMMAND_FILE_TRANSFER_TOPIC);
     mqtt_client.subscribe(COMMAND_FILE_TRANSFER_TOPIC);
+    Serial.print("    MQTT Subscribe: ");Serial.println(COMMAND_INTENSITY_TOPIC);
+    mqtt_client.subscribe(COMMAND_INTENSITY_TOPIC);
 
 }
 
@@ -208,10 +215,35 @@ void MQTTHandle(int message_len)
         MQTTHandleFileTransferMessage(message_data,message_data_len);
     }
     else
+    if(COMMAND_INTENSITY_TOPIC == received_topic)
+    {
+        MQTTHandleIntensityMessage(message_data,message_data_len);
+    }
+    else
     {
       ;/* Mistake?... */  
     } 
 }
+
+
+
+void MQTTHandleIntensityMessage(char *message_data, uint16_t message_len)
+{
+    if(0U == mqtt_client_flags.file_transfer_index)
+    {
+        uint32_t intensity_value = strtoul((const char*)message_data, NULL, 10);
+    
+        if(0U == intensity_value)
+        {
+            intensity_value = strtoul((const char*)message_data, NULL, 16);
+        }
+        
+        LedsSetIntensity(intensity_value);
+    } 
+  
+  
+}
+
 
 void MQTTHandleEffectSelectionMessage(char *message_data, uint16_t message_len)
 {

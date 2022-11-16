@@ -21,7 +21,7 @@ const uint32_t  frequency         PROGMEM = 200;
 
 /* LEDs Definitions ----------------------------------------------------------- */
 #define LEDS_DELAY_RESET        10
-#define LEDS_STRIP_LENGTH       900
+#define LEDS_STRIP_LENGTH       900 /* Total number of bytes in 300 RGB leds with 3bytes per led. */
 #define SEND_LEDS_STATUS_STOP   4
 #define SEND_LEDS_STATUS_START  5
 
@@ -44,6 +44,7 @@ typedef struct
 /* LEDs Global Variables ------------------------------------------------------ */
 uint8_t  leds_rgb_buffer[900U];
 uint8_t  leds_rgb_solid_buffer[3U];
+uint8_t  leds_rgb_intensity = 100;
 
 leds_client_flags_t leds_client_flags = {0U};
 uint16_t leds_current_effect_strip_length = LEDS_STRIP_LENGTH;
@@ -124,14 +125,12 @@ void LedsStart(void)
 
 void LedsSetRGB(uint8_t r, uint8_t g, uint8_t b)
 {
+  uint16_t temp_var = 0U;
+  
   if(0U != leds_client_flags.initialised)
   {
       Serial.println("LEDs new setting: ");
 
-      ledcWrite(channelR, r);
-      ledcWrite(channelG, g);
-      ledcWrite(channelB, b);
-      
       Serial.print("    RED: ");
       Serial.println(r);
       Serial.print("    GREEN: ");
@@ -142,14 +141,64 @@ void LedsSetRGB(uint8_t r, uint8_t g, uint8_t b)
       leds_rgb_solid_buffer[0U] = r;
       leds_rgb_solid_buffer[1U] = g;
       leds_rgb_solid_buffer[2U] = b;
-      LedsRGBReformat(leds_rgb_solid_buffer);
+      //LedsRGBReformat(leds_rgb_solid_buffer);
 
+      temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[0U]; temp_var /= 100;
+      ledcWrite(channelR, temp_var);
+      temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[1U]; temp_var /= 100;
+      ledcWrite(channelG, temp_var);
+      temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[2U]; temp_var /= 100;
+      ledcWrite(channelB, temp_var); 
+  
       if(0U != leds_client_flags.new_effect)
       {
           LedsSetEffectMode(0U);
       }
             
       leds_client_flags.addr_leds_drivr_update = !0U;      
+  }
+}
+
+void LedsSetIntensity(uint8_t intensity)
+{
+  uint16_t temp_var = 0;
+  if(0U != leds_client_flags.initialised)
+  {
+      if(intensity > 100)
+      {
+        intensity = 100;
+      }
+      else
+      if(intensity < 1) 
+      {
+        intensity = 1;
+      }
+      
+      Serial.println("LEDs new intensity ");
+      
+      leds_rgb_intensity = intensity;
+      
+      Serial.print("    Intensity: ");
+      Serial.println(leds_rgb_intensity);
+      
+      if(0U == leds_client_flags.new_effect)
+      {
+        //Serial.print("    RED: ");
+        temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[0U]; temp_var /= 100;
+        //Serial.println(temp_var);
+        ledcWrite(channelR, temp_var);
+        //Serial.print("    GREEN: ");
+        temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[1U]; temp_var /= 100;
+        //Serial.println(temp_var);
+        ledcWrite(channelG, temp_var);
+        //Serial.print("    BLUE: ");
+        temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[2U]; temp_var /= 100;
+        //Serial.println(temp_var);
+        ledcWrite(channelB, temp_var);
+        leds_client_flags.addr_leds_drivr_update = !0U;      
+      }
+      
+      
   }
 }
 
@@ -278,6 +327,7 @@ void LedsWorkRun(void)
 void LedsAddressbleDriver(void)
 {  
     static uint32_t leds_delay = 0U;
+    uint16_t temp_var;
   
     switch(leds_client_flags.addr_leds_drivr_status)
     {
@@ -371,17 +421,32 @@ void LedsAddressbleDriver(void)
                 uint32_t counter = 0;
                 if(0U == leds_client_flags.addr_leds_effect_mode)
                 {
-                    while(counter++ < leds_current_effect_strip_length/3)
+                    uint8_t colr[3] = {0};
+                    temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[0U]; temp_var /= 100;
+                    colr[0U] = temp_var;
+                    temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[1U]; temp_var /= 100;
+                    colr[1U] = temp_var;
+                    temp_var = leds_rgb_intensity; temp_var *= leds_rgb_solid_buffer[2U]; temp_var /= 100;
+                    colr[2U] = temp_var;
+                    LedsRGBReformat(colr);
+                    while(counter++ < LEDS_STRIP_LENGTH/3)
                     {
-                        Serial2.write(leds_rgb_solid_buffer,3);
+                        Serial2.write(colr,3);
                     }
+                    
                     leds_client_flags.addr_leds_drivr_update = 0U;  
                 }
                 else
                 {
                     while(counter < leds_current_effect_strip_length)
                     {
-                        uint8_t colr[3] = {leds_rgb_buffer[counter++],leds_rgb_buffer[counter++],leds_rgb_buffer[counter++]};
+                        uint8_t colr[3] = {0};
+                        temp_var = leds_rgb_intensity; temp_var *= leds_rgb_buffer[counter++]; temp_var /= 100;
+                        colr[0U] = temp_var;
+                        temp_var = leds_rgb_intensity; temp_var *= leds_rgb_buffer[counter++]; temp_var /= 100;
+                        colr[1U] = temp_var;
+                        temp_var = leds_rgb_intensity; temp_var *= leds_rgb_buffer[counter++]; temp_var /= 100;
+                        colr[2U] = temp_var;
                         LedsRGBReformat(colr);
                         Serial2.write(colr,3);
                     }

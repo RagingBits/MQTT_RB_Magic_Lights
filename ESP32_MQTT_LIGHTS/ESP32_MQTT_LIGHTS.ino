@@ -228,7 +228,7 @@ String GetSetNewSerialNumber(void)
     char read_data[50U] = {0U};
     String return_value = "";
     Serial.println("If new serial to be set to this device, enter now.");
-    Serial.println("!!! MUST BE -=> 10 <=- CHARS LONG !!!");
+    Serial.println("!!! MUST BE 10 OR LESS CHARS LONG !!!");
     while(timeout)
     {
         //Serial.print("Time Left: "); Serial.print(timeout);Serial.print("s   \r");
@@ -245,12 +245,18 @@ String GetSetNewSerialNumber(void)
     
     ClearBar();
     
-    if(data_in_counter == 10)
+    if(data_in_counter > 0)
     {
         /* Serial number submited. */  
         //if(0 !=  atoi(read_data))
         {
             return_value = String(read_data);
+            if(return_value.length() > (10)) /* SERIAL_NUM_MAX_LEN -1 */
+            {
+              return_value.toCharArray(read_data,11);
+              return_value = String(read_data);  
+            }
+            
             Serial.println(" ");
             Serial.print("    New serial set: ");
             Serial.println(return_value);
@@ -282,11 +288,16 @@ void setup(void)
   Serial.println("System Starting... ");
   Serial.println("---------------------------------------------");
 
+ 
+  IOPinsStart();
+
+  
   String new_serial = GetSetNewSerialNumber();
 
-  IOPinsStart();
+
   uint32_t counter = 100;
-  
+  //FlashStart();
+  //FlashErase();
   LiteFileSystemInit();
 
   main_flags.work_led = LED_FAST_BLINK;

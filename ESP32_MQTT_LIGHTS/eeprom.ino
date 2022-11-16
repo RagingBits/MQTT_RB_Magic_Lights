@@ -119,35 +119,44 @@ bool string_compare(char *a, char *b, uint32_t len)
 
 void EepromSetLoadSerialNumber(String new_serial)
 {
-    uint8_t SerialNumber[50];
-    uint8_t SerialNumberLen = 50;
-    uint8_t NewSerialNumberLen = 0;
-    EepromRead(EEPROM_SERIAL_NUM, SerialNumber, &SerialNumberLen);
-  
+    char SerialNumber[SERIAL_NUM_MAX_LEN] = {0};
+    uint8_t SerialNumberLen =  new_serial.length();
+    uint8_t indexer = 0;
+    
+    if(SerialNumberLen)
+    {
+        if(SerialNumberLen > (SERIAL_NUM_MAX_LEN-1))
+        {
+            SerialNumberLen = (SERIAL_NUM_MAX_LEN-1);
+        }
+        
+        new_serial.toCharArray(SerialNumber,SerialNumberLen+1); /* Will ignore chars after the string end \0 */
+
+        SerialNumberLen = (SERIAL_NUM_MAX_LEN);
+        
+        EepromWrite(EEPROM_SERIAL_NUM, (uint8_t*)SerialNumber, SerialNumberLen);
+        
+        EepromStart();
+    }
+
+    SerialNumberLen = (SERIAL_NUM_MAX_LEN);
+    EepromRead(EEPROM_SERIAL_NUM,(uint8_t*)SerialNumber, &SerialNumberLen);  
     String serialNumberString = String((char*)SerialNumber);
   
     if(serialNumberString == "")
     {
-        serialNumberString = "0000000000";
+        serialNumberString = "?";
     }
     
-    if(new_serial != "")
+    SerialNumberLen = (SERIAL_NUM_MAX_LEN-1);
+    indexer = userID_.length(); /* Will ignore chars after the string end \0 */
+    while(SerialNumberLen)
     {
-        NewSerialNumberLen = SerialNumberLen;
-        new_serial.toCharArray((char*)SerialNumber, NewSerialNumberLen);
-        EepromWrite(EEPROM_SERIAL_NUM, SerialNumber, NewSerialNumberLen);
-        
-        EepromStart();
+        SerialNumberLen--;
+        indexer--;
+        userID_[indexer] = SerialNumber[SerialNumberLen];
     }
-  
-    NewSerialNumberLen = SerialNumberLen;
-    uint8_t indexer = userID_.length() - NewSerialNumberLen + 1;/* 0 terminator for .length is not accounted. */
-    //Serial.println("Serial");
-    while(NewSerialNumberLen--)
-    {
-        userID_[indexer+NewSerialNumberLen] = SerialNumber[NewSerialNumberLen];
-        //Serial.print(SerialNumber[NewSerialNumberLen]);    
-    }
+    
     //Serial.println(" ");
 }
 
