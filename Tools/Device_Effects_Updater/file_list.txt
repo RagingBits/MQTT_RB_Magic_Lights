@@ -1,9 +1,23 @@
+../Effects_Converter/150LED_FIREFLIES.leds.esp32
+../Effects_Converter/150LED_XTMAS.leds.esp32
+../Effects_Converter/150LED_SPARKLE.leds.esp32
+../Effects_Converter/150LED_BLUE_REFLEX.leds.esp32
+../Effects_Converter/150LED_CRAZY_WHITES.leds.esp32
+
+
+../Effects_Converter/100LED_RAINBOW_ROTATE.leds.esp32
+../Effects_Converter/100LED_XTMAS.leds.esp32
+../Effects_Converter/100LED_SPARKLE.leds.esp32
+../Effects_Converter/100LED_CANDLE_SHUTTLE.leds.esp32
+
+../Effects_Converter/50LED_SPARKLE.leds.esp32
 ../Effects_Converter/50LED_FIREFLIES.leds.esp32
+../Effects_Converter/50LED_RGB_UP_DOWN.leds.esp32
 ../Effects_Converter/50LED_METEO.leds.esp32
-../Effects_Converter/50LED_XTMAS.leds.esp32
-../Effects_Converter/50LED_RAINBOW_ROTATE.leds.esp32
 ../Effects_Converter/50LED_RGB_ROTATE.leds.esp32
+../Effects_Converter/50LED_RGB_UP_DOWN.leds.esp32
 ../Effects_Converter/50LED_FALLING_STARS.leds.esp32
-../Effects_Converter/50LED_FIREWORKS.leds.esp32
 ../Effects_Converter/50LED_WAVES.leds.esp32
+../Effects_Converter/50LED_RANDOM_BLINK.leds.esp32
+
 
