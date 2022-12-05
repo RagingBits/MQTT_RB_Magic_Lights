@@ -3,6 +3,7 @@ python AddressableLEDsConverterForMQTTESP32.py -f "150LED_FIREFLIES.leds"
 python AddressableLEDsConverterForMQTTESP32.py -f "150LED_SPARKLE.leds"
 python AddressableLEDsConverterForMQTTESP32.py -f "150LED_BLUE_REFLEX.leds"
 python AddressableLEDsConverterForMQTTESP32.py -f "150LED_CRAZY_WHITES.leds"
+python AddressableLEDsConverterForMQTTESP32.py -f "150LED_RAINBOW_ROTATE.leds"
 
 python AddressableLEDsConverterForMQTTESP32.py -f "100LED_BLUE_REFLEX.leds"
 python AddressableLEDsConverterForMQTTESP32.py -f "100LED_RAINBOW_ROTATE.leds"

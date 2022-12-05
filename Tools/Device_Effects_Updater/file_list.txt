@@ -1,3 +1,4 @@
+../Effects_Converter/150LED_RAINBOW_ROTATE.leds.esp32
 ../Effects_Converter/150LED_FIREFLIES.leds.esp32
 ../Effects_Converter/150LED_XTMAS.leds.esp32
 ../Effects_Converter/150LED_SPARKLE.leds.esp32
